@@ -1,0 +1,85 @@
+{
+	"name": "robson",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#methods"
+		},
+		{
+			"include": "#integers"
+		},
+		{
+			"include": "#sections"
+		}
+	],
+	
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.robson",
+				"match": "\\b(robson)\\b"
+			}]
+		},
+		"methods": {
+			"patterns": [
+				{
+					"name": "entity.name.type.rosbson",
+					"match": "\\b(comeu|fudeu|chupou|lambeu)\\b"
+				}
+			]
+		},
+		"sections": {
+			"patterns": [
+				{
+					"name": "entity.name.section.robson",
+					"match": "\\w+\\b:"
+				},
+				{
+					"name": "entity.name.section.robson",
+					"match": "\\w*:\\b\\w+"
+				}
+			]
+		},
+		"integers": {
+			"patterns": [
+				{
+					"name": "constant.numeric.robson",
+					"match": "[0-9]"
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.robson",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.robson",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"begin": ";",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.robson"
+						}
+					},
+					"end": "\n"
+				}
+			]
+		}
+	},
+	"scopeName": "source.robson"
+}

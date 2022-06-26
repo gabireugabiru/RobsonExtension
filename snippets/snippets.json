@@ -1,0 +1,62 @@
+{
+    "add": {
+        "prefix": ["add", "sum"],
+        "body": ["robson", "comeu {1:0}", "comeu ${1:0}"],
+        "description": "adds param1 to param2 and push to stack"
+    },
+    "sub": {
+        "prefix": "sub", 
+        "body": ["robson robson", "comeu {1:0}", "comeu ${1:0}"],
+        "description": "substracts param2 of param1 and push to stack"
+    },
+    "push": {
+        "prefix": "push",
+        "body": ["robson robson robson", "comeu ${1:0}"],
+        "description": "pushes the param1 to stack"
+    },
+    "if": {
+        "prefix": "if",
+        "body": ["robson robson robson robson", "comeu ${1:0}", "comeu ${2:0}", "comeu ${3:0}"],
+        "description": "if param1 == param2 then it jumps to param3"
+    },
+    "verify_stack": {
+        "prefix": "vstack",
+        "body": ["robson robson robson robson robson", "comeu ${1:0}"],
+        "description": "if stack is empty jump to param1"
+    },
+    "input": {
+        "prefix": "input",
+        "body": ["robson robson robson robson robson robson", "comeu ${1:0}", "comeu ${2:0}", "comeu ${3:0}"],
+        "description": "get the input of the user and sets it to address param1, if param2 is 1 it counts as integer, param3 is the limit"
+    },
+    "print": {
+        "prefix": "print",
+        "body": "robson robson robson robson robson robson robson",
+        "description": "prints the top of the stack as ascii"
+    },
+    "print_number": {
+        "prefix": "pnumber",
+        "body": "robson robson robson robson robson robson robson robson",
+        "description": "print the top of the stack as number"
+    },
+    "jump": {
+        "prefix": "jump",
+        "body": ["robson robson robson robson robson robson robson robson robson", "comeu ${1:0}"],
+        "description": "jumps to param1"
+    },
+    "set": {
+        "prefix": "set",
+        "body": ["robson robson robson robson robson robson robson robson robson robson", "comeu ${1:0}"],
+        "description": "set the address of param1 to the param2 value"
+    },
+    "pop": {
+        "prefix": "pop",
+        "body": "robson robson robson robson robson robson robson robson robson robson robson",
+        "description": "remove top of stack"
+    },
+    "load": {
+        "prefix": "load",
+        "body": ["robson robson robson robson robson robson robson robson robson robson robson robson", "comeu ${1:0}"],
+        "description": "load the string from the address of param1"
+    }
+}

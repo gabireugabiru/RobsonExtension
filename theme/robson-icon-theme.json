@@ -1,0 +1,10 @@
+{
+  "iconDefinitions": {
+    "_robson": {
+      "iconPath": "../icons/Robson.png"
+    }
+  },
+  "fileExtensions": {
+    "robson": "_robson"
+  }
+}

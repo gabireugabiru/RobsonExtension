@@ -1,0 +1,49 @@
+{
+    "name": "robsonanalyzer",
+    "displayName": "Robson",
+    "description": "A extension for high level coding with robson",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.68.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Snippets"
+    ],
+    "contributes": {
+        "iconThemes": [
+            {
+                "id": "robson-theme",
+                "label": "robson",
+                "path": "./theme/robson-icon-theme.json"
+            }
+        ],
+        "icons": {
+            "robson-icon": {
+                "description": "my icon",
+                "iconPath": "",
+                "default": {
+                    "fontPath": "myiconfont.woff",
+                    "fontCharacter": "\\E001"
+                }
+            }
+        },
+        "snippets": [
+            {
+                "language": "robson",
+                "path": "./snippets/snippets.json"
+            }
+        ],
+        "languages": [{
+            "id": "robson",
+            "aliases": ["robson", "robson"],
+            "extensions": [".robson"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "robson",
+            "scopeName": "source.robson",
+            "path": "./syntaxes/robson.tmLanguage.json"
+        }]
+    }
+}
