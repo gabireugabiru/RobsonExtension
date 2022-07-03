@@ -20,19 +20,20 @@
 			"include": "#sections"
 		}
 	],
-	
 	"repository": {
 		"keywords": {
-			"patterns": [{
-				"name": "keyword.control.robson",
-				"match": "\\b(robson)\\b"
-			}]
+			"patterns": [
+				{
+					"name": "keyword.control.robson",
+					"match": "\\b(robson)\\b"
+				}
+			]
 		},
 		"methods": {
 			"patterns": [
 				{
 					"name": "entity.name.type.rosbson",
-					"match": "\\b(comeu|fudeu|chupou|lambeu)\\b"
+					"match": "\\b(comeu|fudeu|chupou|lambeu|penetrou)\\b"
 				}
 			]
 		},
@@ -52,7 +53,7 @@
 			"patterns": [
 				{
 					"name": "constant.numeric.robson",
-					"match": "[0-9]"
+					"match": "([0-9]|\\b[f]\\w*[0-9]\\b|\\b[i]\\w*[-]\\b|[i]\\w*[0-9]|\\b[.]\\w*[0-9]\\b)"
 				}
 			]
 		},

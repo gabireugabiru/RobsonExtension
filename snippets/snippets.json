@@ -1,33 +1,96 @@
 {
     "add": {
-        "prefix": ["add", "sum"],
-        "body": ["robson", "comeu {1:0}", "comeu ${1:0}"],
-        "description": "adds param1 to param2 and push to stack"
+        "prefix": [
+            "add",
+            "sum"
+        ],
+        "body": [
+            "robson",
+            "comeu 0",
+            "comeu ${1:0}",
+            "comeu ${2:0}"
+        ],
+        "description": "adds param2 to param3 and push to stack"
     },
     "sub": {
-        "prefix": "sub", 
-        "body": ["robson robson", "comeu {1:0}", "comeu ${1:0}"],
-        "description": "substracts param2 of param1 and push to stack"
+        "prefix": "sub",
+        "body": [
+            "robson",
+            "comeu 1",
+            "comeu ${1:0}",
+            "comeu ${2:0}"
+        ],
+        "description": "substracts param3 of param2 and push to stack"
+    },
+    "mul": {
+        "prefix": "mul",
+        "body": [
+            "robson",
+            "comeu 2",
+            "comeu ${1:0}",
+            "comeu ${2:0}"
+        ],
+        "description": "multiplies param3 and param2 and push to stack"
+    },
+    "div": {
+        "prefix": "div",
+        "body": [
+            "robson",
+            "comeu 3",
+            "comeu ${1:0}",
+            "comeu ${2:0}"
+        ],
+        "description": "dividies param2 of param3 and push to stack"
+    },
+    "if_lower": {
+        "prefix": [
+            "if_lower",
+            "if2",
+            "ifl"
+        ],
+        "body": [
+            "robson robson",
+            "comeu ${1:0}",
+            "comeu ${2:0}",
+            "lambeu ${3::}"
+        ],
+        "description": "if param1 < param2 then it jumps to param3"
     },
     "push": {
         "prefix": "push",
-        "body": ["robson robson robson", "comeu ${1:0}"],
+        "body": [
+            "robson robson robson",
+            "comeu ${1:0}"
+        ],
         "description": "pushes the param1 to stack"
     },
     "if": {
         "prefix": "if",
-        "body": ["robson robson robson robson", "comeu ${1:0}", "comeu ${2:0}", "comeu ${3:0}"],
+        "body": [
+            "robson robson robson robson",
+            "comeu ${1:0}",
+            "comeu ${2:0}",
+            "lambeu ${3::}"
+        ],
         "description": "if param1 == param2 then it jumps to param3"
     },
     "verify_stack": {
         "prefix": "vstack",
-        "body": ["robson robson robson robson robson", "comeu ${1:0}"],
+        "body": [
+            "robson robson robson robson robson",
+            "lambeu ${1::}"
+        ],
         "description": "if stack is empty jump to param1"
     },
     "input": {
         "prefix": "input",
-        "body": ["robson robson robson robson robson robson", "comeu ${1:0}", "comeu ${2:0}", "comeu ${3:0}"],
-        "description": "get the input of the user and sets it to address param1, if param2 is 1 it counts as integer, param3 is the limit"
+        "body": [
+            "robson robson robson robson robson robson",
+            "comeu ${1:0}",
+            "comeu ${2:0}",
+            "comeu ${3:0}"
+        ],
+        "description": "get the input of the user and sets it to address param1, if param2 is 1 it counts as integer, if is 2 is an signed integer if 3 is float, otherwise is string, param3 is the limit"
     },
     "print": {
         "prefix": "print",
@@ -35,18 +98,28 @@
         "description": "prints the top of the stack as ascii"
     },
     "print_number": {
-        "prefix": "pnumber",
+        "prefix": [
+            "pnumber",
+            "printnumber",
+            "printn"
+        ],
         "body": "robson robson robson robson robson robson robson robson",
         "description": "print the top of the stack as number"
     },
     "jump": {
         "prefix": "jump",
-        "body": ["robson robson robson robson robson robson robson robson robson", "comeu ${1:0}"],
+        "body": [
+            "robson robson robson robson robson robson robson robson robson",
+            "lambeu ${1::}"
+        ],
         "description": "jumps to param1"
     },
     "set": {
         "prefix": "set",
-        "body": ["robson robson robson robson robson robson robson robson robson robson", "comeu ${1:0}"],
+        "body": [
+            "robson robson robson robson robson robson robson robson robson robson",
+            "comeu ${1:0}"
+        ],
         "description": "set the address of param1 to the param2 value"
     },
     "pop": {
@@ -56,7 +129,10 @@
     },
     "load": {
         "prefix": "load",
-        "body": ["robson robson robson robson robson robson robson robson robson robson robson robson", "comeu ${1:0}"],
+        "body": [
+            "robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu ${1:0}"
+        ],
         "description": "load the string from the address of param1"
     }
 }

@@ -1,15 +1,20 @@
 {
     "name": "robsonanalyzer",
-    "displayName": "Robson",
+    "displayName": "Robson Analyzer",
     "description": "A extension for high level coding with robson",
-    "version": "0.0.1",
+    "version": "0.0.4",
+    "publisher": "GabiruGabireu",
+    "icon": "icons/robson_real.jpeg",
     "engines": {
-        "vscode": "^1.68.0"
+        "vscode": "^1.30.0"
     },
     "categories": [
         "Programming Languages",
         "Snippets"
     ],
+    "repository": {
+        "url": "https://github.com/gabireugabiru/RobsonExtension"
+    },
     "contributes": {
         "iconThemes": [
             {
@@ -34,16 +39,25 @@
                 "path": "./snippets/snippets.json"
             }
         ],
-        "languages": [{
-            "id": "robson",
-            "aliases": ["robson", "robson"],
-            "extensions": [".robson"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "robson",
-            "scopeName": "source.robson",
-            "path": "./syntaxes/robson.tmLanguage.json"
-        }]
+        "languages": [
+            {
+                "id": "robson",
+                "aliases": [
+                    "robson",
+                    "robson"
+                ],
+                "extensions": [
+                    ".robson"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "robson",
+                "scopeName": "source.robson",
+                "path": "./syntaxes/robson.tmLanguage.json"
+            }
+        ]
     }
 }
