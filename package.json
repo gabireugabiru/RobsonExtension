@@ -6,7 +6,7 @@
     "publisher": "GabiruGabireu",
     "icon": "icons/robson_real.jpeg",
     "engines": {
-        "vscode": "^1.30.0"
+        "vscode": "^1.63.0"
     },
     "categories": [
         "Programming Languages",
@@ -15,7 +15,36 @@
     "repository": {
         "url": "https://github.com/gabireugabiru/RobsonExtension"
     },
+    "activationEvents": [
+        "onLanguage:robson"
+    ],
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w",
+        "postinstall": "npm install && cd server && npm install && cd .."
+    },
+    "dependencies": {
+        "vscode-languageclient": "^7.0.0"
+    },
+    "main": "./out/extension",
+    "devDependencies": {
+        "@types/node": "^18.0.1",
+        "@types/vscode": "^1.63.0"
+    },
     "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Robson Configuration",
+            "properties": {
+                "RobsonAnalyzer.maxNumberOfProblems": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 100,
+                    "description": "Controls the maximum number of problems produced by the server."
+                }
+            }
+        },
         "iconThemes": [
             {
                 "id": "robson-theme",
