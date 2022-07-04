@@ -44,9 +44,7 @@
     },
     "if_lower": {
         "prefix": [
-            "if_lower",
-            "if2",
-            "ifl"
+            "if_lower"
         ],
         "body": [
             "robson robson",
@@ -99,9 +97,7 @@
     },
     "print_number": {
         "prefix": [
-            "pnumber",
-            "printnumber",
-            "printn"
+            "pnumber"
         ],
         "body": "robson robson robson robson robson robson robson robson",
         "description": "print the top of the stack as number"

@@ -16,11 +16,13 @@ import {
     Command,
     TextDocumentEdit,
     TextEdit,
-    Range
+    Location,
+    Range,
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { lowerAlias } from "./utils";
+
 
 type AliasInfo = {
     range: Range,
@@ -34,6 +36,7 @@ let connection = createConnection(ProposedFeatures.all);
 // Create a simple text document manager.
 let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let aliases: AliasInfo[] = [];
+let aliasUse: AliasInfo[] = []
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
 let hasDiagnosticRelatedInformationCapability: boolean = false;
@@ -59,13 +62,17 @@ connection.onInitialize((params: InitializeParams) => {
         capabilities: {
             textDocumentSync: TextDocumentSyncKind.Incremental,
             // Tell the client that this server supports code completion.
+            completionProvider: {
+                resolveProvider: true,
+            },
+            // Tell the client that this server support code actions.
             codeActionProvider: true,
+            // Tell the client that this server support commnds
             executeCommandProvider: {
                 commands: ["re.name"]
             },
-            completionProvider: {
-                resolveProvider: true,
-            }
+            // Tell the client thtat this server support definitions
+            definitionProvider: true,
         }
     };
     if (hasWorkspaceFolderCapability) {
@@ -136,31 +143,29 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 // Only keep settings for open documents
 documents.onDidClose(e => {
     documentSettings.delete(e.document.uri);
+    // const inlay = new InlayHint(e.document.positionAt(0), "teste", InlayHintKind.Type);
 });
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
     validateTextDocument(change.document);
-
 });
 async function updateAliases(textDocument: TextDocument, diagnostics: Diagnostic[]) {
-    const pattern = /\w+\b:/g;
+    const aliasDeclarationPattern = /\w+\b:/g;
     const values: AliasInfo[] = [];
-    let match: RegExpExecArray | null;
+    let aliasDeclarationMatch: RegExpExecArray | null;
     const text = textDocument.getText();
-    while (match = pattern.exec(text)) {
-
-
+    while (aliasDeclarationMatch = aliasDeclarationPattern.exec(text)) {
         const range = {
-            start: textDocument.positionAt(match.index),
-            end: textDocument.positionAt(match.index + match[0].length)
+            start: textDocument.positionAt(aliasDeclarationMatch.index),
+            end: textDocument.positionAt(aliasDeclarationMatch.index + aliasDeclarationMatch[0].length)
         };
-        const stringMatch = match?.toString().replace(":", "");
+        const stringMatch = aliasDeclarationMatch?.toString().replace(":", "");
         const alias = values.find(a => a.value === stringMatch);
         if (alias) {
             let diagnostic: Diagnostic = {
-                message: `Duplicated alias ${match.toString()}`,
+                message: `Duplicated alias ${aliasDeclarationMatch.toString()}`,
                 range,
                 severity: DiagnosticSeverity.Error
             }
@@ -181,12 +186,34 @@ async function updateAliases(textDocument: TextDocument, diagnostics: Diagnostic
         }
     }
     aliases = values;
+
+    const aliasUsagePattern = /\w*:\b\w+/g
+    let aliasUsageMatch: RegExpExecArray | null;
+    let aliasUsages: AliasInfo[] = [];
+    while (aliasUsageMatch = aliasUsagePattern.exec(text)) {
+        let stringMatch = aliasUsageMatch?.toString().replace(":", "");
+        const declaration = values.find(a => a.value == stringMatch);
+        const range: Range = {
+            start: textDocument.positionAt(aliasUsageMatch.index),
+            end: textDocument.positionAt(aliasUsageMatch.index + aliasUsageMatch[0].length)
+        };
+
+        if (!declaration) {
+            let diagnostic: Diagnostic = {
+                message: "Using alias before declaration",
+                range,
+                severity: DiagnosticSeverity.Error
+            }
+            diagnostics.push(diagnostic);
+        }
+        aliasUsages.push({ value: stringMatch, range });
+    }
+    aliasUse = aliasUsages;
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     // In this simple example we get the settings for every validate run.
     let settings = await getDocumentSettings(textDocument.uri);
-
     // The validator creates diagnostics for all uppercase words length 2 and more
     let text = textDocument.getText();
     let problems = 0;
@@ -222,7 +249,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         diagnostics.push(diagnostic);
     }
 
-
     let invalidLambeuPattern = /\blambeu [^:].*\b/g;
     let invalidLambeuMatch: RegExpExecArray | null;
     while ((invalidLambeuMatch = invalidLambeuPattern.exec(text)) && problems < settings.maxNumberOfProblems) {
@@ -247,6 +273,34 @@ connection.onDidChangeWatchedFiles(_change => {
     // Monitored files have change in VS Code
     connection.console.log('We received a file change event');
 });
+
+connection.onDefinition(params => {
+    const textDocument = documents.get(params.textDocument.uri);
+    if (!textDocument) {
+        return
+    }
+
+    let aliasSelected: AliasInfo | undefined;
+
+    for (const alias of aliasUse) {
+        const line = alias.range.start.line;
+        const char_start = alias.range.start.character;
+        const char_end = alias.range.end.character;
+        if (line === params.position.line && params.position.character >= char_start && params.position.character <= char_end) {
+            aliasSelected = alias;
+        }
+    }
+
+    if (!aliasSelected) {
+        return
+    }
+    const aliasDeclaration = aliases.find(a => a.value === aliasSelected?.value);
+    if (!aliasDeclaration) {
+        return
+    }
+
+    return Location.create(params.textDocument.uri, aliasDeclaration.range);
+})
 
 // This handler provides the initial list of the completion items.
 connection.onCompletion(
@@ -379,6 +433,10 @@ connection.onExecuteCommand(params => {
                     ])
                 ]
             });
+
+
+
+
             break;
         }
 

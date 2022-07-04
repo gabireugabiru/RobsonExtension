@@ -2,7 +2,7 @@
     "name": "robsonanalyzer",
     "displayName": "Robson Analyzer",
     "description": "A extension for high level coding with robson",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "publisher": "GabiruGabireu",
     "icon": "icons/robson_real.jpeg",
     "engines": {
