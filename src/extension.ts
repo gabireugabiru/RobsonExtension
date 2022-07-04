@@ -10,7 +10,7 @@ function getOpcode(string: string): number {
   if (removed_comments.length > 0) {
     string = removed_comments[0];
   }
-  const splited = string.split(' ');
+  const splited = string.trim().split(' ');
   for (const keyword of splited) {
     if (keyword.trim() == "robson") {
       opcode++;
@@ -84,7 +84,7 @@ export function activate(context: ExtensionContext) {
     provideInlayHints(document, position, context) {
       console.log("triggered");
 
-      const pattern = /robson *.*/g
+      const pattern = /^ *?robson *.*/gm
 
       let match: RegExpExecArray | null;
 
@@ -97,7 +97,15 @@ export function activate(context: ExtensionContext) {
           continue;
         }
         let label = labels[opcode];
-        const position = document.positionAt(match.index);
+        let n_for_robson = 0;
+        for (const char of stringMatch) {
+          if (char === " ") {
+            n_for_robson++
+          } else {
+            break
+          }
+        }
+        const position = document.positionAt(match.index + n_for_robson);
         const hint: vscode.InlayHint = {
           label,
           position,

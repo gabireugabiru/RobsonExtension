@@ -21,7 +21,8 @@ import {
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { lowerAlias } from "./utils";
+import { getOpcode, labels, lowerAlias, parameterCount, removeComments } from "./utils";
+import { channel } from 'diagnostics_channel';
 
 
 type AliasInfo = {
@@ -98,25 +99,25 @@ connection.onInitialized((t) => {
 });
 
 // The example settings
-interface ExampleSettings {
+interface DefaultSettings {
     maxNumberOfProblems: number;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ExampleSettings = defaultSettings;
+const defaultSettings: DefaultSettings = { maxNumberOfProblems: 1000 };
+let globalSettings: DefaultSettings = defaultSettings;
 
 // Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
+let documentSettings: Map<string, Thenable<DefaultSettings>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
     if (hasConfigurationCapability) {
         // Reset all cached document settings
         documentSettings.clear();
     } else {
-        globalSettings = <ExampleSettings>(
+        globalSettings = <DefaultSettings>(
             (change.settings.languageServerExample || defaultSettings)
         );
     }
@@ -125,7 +126,7 @@ connection.onDidChangeConfiguration(change => {
     documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+function getDocumentSettings(resource: string): Thenable<DefaultSettings> {
     if (!hasConfigurationCapability) {
         return Promise.resolve(globalSettings);
     }
@@ -151,6 +152,71 @@ documents.onDidClose(e => {
 documents.onDidChangeContent(change => {
     validateTextDocument(change.document);
 });
+
+async function validateCommands(textDocument: TextDocument, diagnostics: Diagnostic[]) {
+    const commandPattern = /^ *?robson *.*/gm;
+    let match: RegExpExecArray | null;
+    const text = textDocument.getText();
+
+    while (match = commandPattern.exec(text)) {
+        const stringMatch = match.toString();
+        const opcode = getOpcode(stringMatch);
+        if (opcode < 0 || opcode > 12) {
+            continue
+        }
+
+        const start = textDocument.positionAt(match.index);
+        const paramsCount = (parameterCount as any)[opcode];
+        let given = 0;
+        for (let i = 0; i < paramsCount; i++) {
+            const range: Range = {
+                start: {
+                    character: 0,
+                    line: start.line + i + 1
+                },
+                end: {
+                    character: 0,
+                    line: start.line + i + 2
+                }
+            }
+            const param = removeComments(textDocument.getText(range).trim());
+            if (param.length === 0) {
+                let diagnostic: Diagnostic = {
+                    message: `Missing parameters for ${(labels as any)[opcode]}, needs ${paramsCount} given ${given}`,
+                    range,
+                    severity: DiagnosticSeverity.Error
+                }
+                diagnostics.push(diagnostic);
+                break;
+            } else {
+
+            }
+            given++
+        }
+    }
+}
+async function invalidKeywords(textDocument: TextDocument, diagnostics: Diagnostic[]) {
+    const pattern = /^(?! *(robson|comeu|fudeu|penetrou|chupou|lambeu|;|\w+:|\n)).*/gm;
+    let match: RegExpExecArray | null;
+    const text = textDocument.getText();
+    while (match = pattern.exec(text)) {
+        if (match[0].trim().length == 0) {
+            break
+        }
+        console.log(match.toString());
+        let diagnostic: Diagnostic = {
+            message: `Unknown keyword ${match.toString()}`,
+            range: {
+                start: textDocument.positionAt(match.index),
+                end: textDocument.positionAt(match.index + match[0].length),
+            },
+            severity: DiagnosticSeverity.Error
+        }
+        diagnostics.push(diagnostic);
+    }
+}
+
+
 async function updateAliases(textDocument: TextDocument, diagnostics: Diagnostic[]) {
     const aliasDeclarationPattern = /\w+\b:/g;
     const values: AliasInfo[] = [];
@@ -264,7 +330,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         diagnostics.push(diagnostic);
     }
     updateAliases(textDocument, diagnostics);
-
+    validateCommands(textDocument, diagnostics);
+    invalidKeywords(textDocument, diagnostics);
     // Send the computed diagnostics to VS Code.
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
@@ -424,7 +491,6 @@ connection.onExecuteCommand(params => {
 
             const lowered_alias = lowerAlias(text);
 
-            console.log({ lowered_alias });
 
             connection.workspace.applyEdit({
                 documentChanges: [
@@ -433,19 +499,12 @@ connection.onExecuteCommand(params => {
                     ])
                 ]
             });
-
-
-
-
             break;
         }
-
         default: {
             break;
         }
     }
-
-
 })
 
 // Make the text document manager listen on the connection

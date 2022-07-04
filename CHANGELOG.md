@@ -1,5 +1,16 @@
 # Change Log
-# 0.0.5
+
+> #### Added
+> - error for unknown keywords
+> - error for missing parameters
+
+## 0.0.6
+
+> #### Added
+> - inlay hints
+> - go to definition on aliases
+
+## 0.0.5
 
 > #### Added
 > - alias autocomplete
@@ -7,13 +18,13 @@
 > - lambeu malformated value error
 > - camel case warning and autocomplete
 
-# 0.0.4
+## 0.0.4
 
-#### Added an icon to the extension 
+> #### Added
+> - icon for the extension
+> - support for the penetrou keyword
 
-#### Added penetrou to the type keywords
-
-# Initial release
+## Initial release
 
 #### Added syntax highlights
 
@@ -30,5 +41,6 @@
 > - set
 > - pop
 > - load
+
 #### Added icon for .robson
 
