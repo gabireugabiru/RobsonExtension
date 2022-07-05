@@ -2,7 +2,7 @@
     "name": "robsonanalyzer",
     "displayName": "Robson Analyzer",
     "description": "A extension for high level coding with robson",
-    "version": "0.0.6",
+    "version": "0.0.8",
     "publisher": "GabiruGabireu",
     "icon": "icons/robson_real.jpeg",
     "engines": {
@@ -16,7 +16,8 @@
         "url": "https://github.com/gabireugabiru/RobsonExtension"
     },
     "activationEvents": [
-        "onLanguage:robson"
+        "onLanguage:robson",
+        "onCommand:workbench.action.runTask"
     ],
     "scripts": {
         "vscode:prepublish": "npm run compile",
@@ -33,6 +34,14 @@
         "@types/vscode": "^1.63.0"
     },
     "contributes": {
+        "taskDefinitions": [
+            {
+                "type": "robson",
+                "properties": {
+                    "isBuildCommand": true
+                }
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "Robson Configuration",

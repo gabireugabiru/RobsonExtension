@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.0.8
+> #### Added
+> - error for comeu, fudeu, penetrou and chupou malformated numbers
+> - warning for unused aliases
+> - add build task to run the code (one wich doesnt build anything)
+
+## 0.0.7
+
 > #### Added
 > - error for unknown keywords
 > - error for missing parameters

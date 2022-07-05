@@ -1,8 +1,6 @@
 import {
     createConnection,
     TextDocuments,
-    Diagnostic,
-    DiagnosticSeverity,
     ProposedFeatures,
     InitializeParams,
     DidChangeConfigurationNotification,
@@ -19,28 +17,38 @@ import {
     Location,
     Range,
 } from 'vscode-languageserver/node';
-
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { getOpcode, labels, lowerAlias, parameterCount, removeComments } from "./utils";
-import { channel } from 'diagnostics_channel';
+import { lowerAlias } from "./utils";
+import { validateTextDocument } from './validations';
 
+interface DefaultSettings {
+    maxNumberOfProblems: number;
+}
 
-type AliasInfo = {
+export type AliasInfo = {
     range: Range,
     value: string
 }
 
-// Create a connection for the server, using Node's IPC as a transport.
-// Also include all preview / proposed LSP features.
-let connection = createConnection(ProposedFeatures.all);
+const defaultSettings: DefaultSettings = { maxNumberOfProblems: 1000 };
 
-// Create a simple text document manager.
+export let connection = createConnection(ProposedFeatures.all);
+export let hasDiagnosticRelatedInformationCapability: boolean = false;
+
 let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let aliases: AliasInfo[] = [];
-let aliasUse: AliasInfo[] = []
+let aliasUse: AliasInfo[] = [];
+let globalSettings: DefaultSettings = defaultSettings;
+
+let documentSettings: Map<string, Thenable<DefaultSettings>> = new Map();
 let hasConfigurationCapability: boolean = false;
-let hasWorkspaceFolderCapability: boolean = false;
-let hasDiagnosticRelatedInformationCapability: boolean = false;
+
+export function setAliases(newAliases: AliasInfo[]) {
+    aliases = newAliases;
+}
+export function setAliasUse(newUses: AliasInfo[]) {
+    aliasUse = newUses;
+}
 
 connection.onInitialize((params: InitializeParams) => {
     let capabilities = params.capabilities;
@@ -50,9 +58,7 @@ connection.onInitialize((params: InitializeParams) => {
     hasConfigurationCapability = !!(
         capabilities.workspace && !!capabilities.workspace.configuration
     );
-    hasWorkspaceFolderCapability = !!(
-        capabilities.workspace && !!capabilities.workspace.workspaceFolders
-    );
+
     hasDiagnosticRelatedInformationCapability = !!(
         capabilities.textDocument &&
         capabilities.textDocument.publishDiagnostics &&
@@ -76,13 +82,6 @@ connection.onInitialize((params: InitializeParams) => {
             definitionProvider: true,
         }
     };
-    if (hasWorkspaceFolderCapability) {
-        result.capabilities.workspace = {
-            workspaceFolders: {
-                supported: true
-            }
-        };
-    }
     return result;
 });
 
@@ -91,26 +90,25 @@ connection.onInitialized((t) => {
         // Register for all configuration changes.
         connection.client.register(DidChangeConfigurationNotification.type, undefined);
     }
-    if (hasWorkspaceFolderCapability) {
-        connection.workspace.onDidChangeWorkspaceFolders(_event => {
-            connection.console.log('Workspace folder change event received.');
-        });
-    }
 });
 
-// The example settings
-interface DefaultSettings {
-    maxNumberOfProblems: number;
+
+export function getDocumentSettings(resource: string): Thenable<DefaultSettings> {
+    if (!hasConfigurationCapability) {
+        return Promise.resolve(globalSettings);
+    }
+    let result = documentSettings.get(resource);
+    if (!result) {
+        result = connection.workspace.getConfiguration({
+            scopeUri: resource,
+            section: 'RobsonAnalyzer'
+        });
+        documentSettings.set(resource, result);
+    }
+    return result;
 }
 
-// The global settings, used when the `workspace/configuration` request is not supported by the client.
-// Please note that this is not the case when using this server with the client provided in this example
-// but could happen with other clients.
-const defaultSettings: DefaultSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: DefaultSettings = defaultSettings;
 
-// Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<DefaultSettings>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
     if (hasConfigurationCapability) {
@@ -126,25 +124,9 @@ connection.onDidChangeConfiguration(change => {
     documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<DefaultSettings> {
-    if (!hasConfigurationCapability) {
-        return Promise.resolve(globalSettings);
-    }
-    let result = documentSettings.get(resource);
-    if (!result) {
-        result = connection.workspace.getConfiguration({
-            scopeUri: resource,
-            section: 'RobsonAnalyzer'
-        });
-        documentSettings.set(resource, result);
-    }
-    return result;
-}
-
 // Only keep settings for open documents
 documents.onDidClose(e => {
     documentSettings.delete(e.document.uri);
-    // const inlay = new InlayHint(e.document.positionAt(0), "teste", InlayHintKind.Type);
 });
 
 // The content of a text document has changed. This event is emitted
@@ -152,189 +134,6 @@ documents.onDidClose(e => {
 documents.onDidChangeContent(change => {
     validateTextDocument(change.document);
 });
-
-async function validateCommands(textDocument: TextDocument, diagnostics: Diagnostic[]) {
-    const commandPattern = /^ *?robson *.*/gm;
-    let match: RegExpExecArray | null;
-    const text = textDocument.getText();
-
-    while (match = commandPattern.exec(text)) {
-        const stringMatch = match.toString();
-        const opcode = getOpcode(stringMatch);
-        if (opcode < 0 || opcode > 12) {
-            continue
-        }
-
-        const start = textDocument.positionAt(match.index);
-        const paramsCount = (parameterCount as any)[opcode];
-        let given = 0;
-        for (let i = 0; i < paramsCount; i++) {
-            const range: Range = {
-                start: {
-                    character: 0,
-                    line: start.line + i + 1
-                },
-                end: {
-                    character: 0,
-                    line: start.line + i + 2
-                }
-            }
-            const param = removeComments(textDocument.getText(range).trim());
-            if (param.length === 0) {
-                let diagnostic: Diagnostic = {
-                    message: `Missing parameters for ${(labels as any)[opcode]}, needs ${paramsCount} given ${given}`,
-                    range,
-                    severity: DiagnosticSeverity.Error
-                }
-                diagnostics.push(diagnostic);
-                break;
-            } else {
-
-            }
-            given++
-        }
-    }
-}
-async function invalidKeywords(textDocument: TextDocument, diagnostics: Diagnostic[]) {
-    const pattern = /^(?! *(robson|comeu|fudeu|penetrou|chupou|lambeu|;|\w+:|\n)).*/gm;
-    let match: RegExpExecArray | null;
-    const text = textDocument.getText();
-    while (match = pattern.exec(text)) {
-        if (match[0].trim().length == 0) {
-            break
-        }
-        console.log(match.toString());
-        let diagnostic: Diagnostic = {
-            message: `Unknown keyword ${match.toString()}`,
-            range: {
-                start: textDocument.positionAt(match.index),
-                end: textDocument.positionAt(match.index + match[0].length),
-            },
-            severity: DiagnosticSeverity.Error
-        }
-        diagnostics.push(diagnostic);
-    }
-}
-
-
-async function updateAliases(textDocument: TextDocument, diagnostics: Diagnostic[]) {
-    const aliasDeclarationPattern = /\w+\b:/g;
-    const values: AliasInfo[] = [];
-    let aliasDeclarationMatch: RegExpExecArray | null;
-    const text = textDocument.getText();
-    while (aliasDeclarationMatch = aliasDeclarationPattern.exec(text)) {
-        const range = {
-            start: textDocument.positionAt(aliasDeclarationMatch.index),
-            end: textDocument.positionAt(aliasDeclarationMatch.index + aliasDeclarationMatch[0].length)
-        };
-        const stringMatch = aliasDeclarationMatch?.toString().replace(":", "");
-        const alias = values.find(a => a.value === stringMatch);
-        if (alias) {
-            let diagnostic: Diagnostic = {
-                message: `Duplicated alias ${aliasDeclarationMatch.toString()}`,
-                range,
-                severity: DiagnosticSeverity.Error
-            }
-            if (hasDiagnosticRelatedInformationCapability) {
-                diagnostic.relatedInformation = [
-                    {
-                        location: {
-                            uri: textDocument.uri,
-                            range: Object.assign({}, alias.range)
-                        },
-                        message: "First declared here"
-                    },
-                ];
-            }
-            diagnostics.push(diagnostic);
-        } else {
-            values.push({ range, value: stringMatch });
-        }
-    }
-    aliases = values;
-
-    const aliasUsagePattern = /\w*:\b\w+/g
-    let aliasUsageMatch: RegExpExecArray | null;
-    let aliasUsages: AliasInfo[] = [];
-    while (aliasUsageMatch = aliasUsagePattern.exec(text)) {
-        let stringMatch = aliasUsageMatch?.toString().replace(":", "");
-        const declaration = values.find(a => a.value == stringMatch);
-        const range: Range = {
-            start: textDocument.positionAt(aliasUsageMatch.index),
-            end: textDocument.positionAt(aliasUsageMatch.index + aliasUsageMatch[0].length)
-        };
-
-        if (!declaration) {
-            let diagnostic: Diagnostic = {
-                message: "Using alias before declaration",
-                range,
-                severity: DiagnosticSeverity.Error
-            }
-            diagnostics.push(diagnostic);
-        }
-        aliasUsages.push({ value: stringMatch, range });
-    }
-    aliasUse = aliasUsages;
-}
-
-async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-    // In this simple example we get the settings for every validate run.
-    let settings = await getDocumentSettings(textDocument.uri);
-    // The validator creates diagnostics for all uppercase words length 2 and more
-    let text = textDocument.getText();
-    let problems = 0;
-    let diagnostics: Diagnostic[] = [];
-
-    let camelCasePattern = /:[A-Za-z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*|[A-Za-z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*:/g;
-    let camelCaseMatch: RegExpExecArray | null;
-    while ((camelCaseMatch = camelCasePattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-        problems++;
-        let diagnostic: Diagnostic = {
-            severity: DiagnosticSeverity.Warning,
-            range: {
-                start: textDocument.positionAt(camelCaseMatch.index),
-                end: textDocument.positionAt(camelCaseMatch.index + camelCaseMatch[0].length)
-            },
-            message: `${camelCaseMatch[0]} Has camel case`,
-            source: 'ex',
-        };
-
-        const lowercase = lowerAlias(camelCaseMatch[0]);
-
-        if (hasDiagnosticRelatedInformationCapability) {
-            diagnostic.relatedInformation = [
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: `Write it as ${lowercase}`
-                },
-            ];
-        }
-        diagnostics.push(diagnostic);
-    }
-
-    let invalidLambeuPattern = /\blambeu [^:].*\b/g;
-    let invalidLambeuMatch: RegExpExecArray | null;
-    while ((invalidLambeuMatch = invalidLambeuPattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-        problems++;
-        let diagnostic: Diagnostic = {
-            severity: DiagnosticSeverity.Error,
-            message: "Invalid alias for lambeu",
-            range: {
-                start: textDocument.positionAt(invalidLambeuMatch.index),
-                end: textDocument.positionAt(invalidLambeuMatch.index + invalidLambeuMatch[0].length)
-            }
-        }
-        diagnostics.push(diagnostic);
-    }
-    updateAliases(textDocument, diagnostics);
-    validateCommands(textDocument, diagnostics);
-    invalidKeywords(textDocument, diagnostics);
-    // Send the computed diagnostics to VS Code.
-    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-}
 
 connection.onDidChangeWatchedFiles(_change => {
     // Monitored files have change in VS Code
@@ -346,7 +145,6 @@ connection.onDefinition(params => {
     if (!textDocument) {
         return
     }
-
     let aliasSelected: AliasInfo | undefined;
 
     for (const alias of aliasUse) {

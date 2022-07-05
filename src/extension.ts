@@ -4,6 +4,15 @@ import { ExtensionContext, workspace } from "vscode";
 import * as vscode from "vscode";
 let client: LanguageClient;
 
+function getFileName(path: string): string {
+  const splited = path.split("/");
+  if (splited.length === 0) {
+    return path
+  } else {
+    return splited[splited.length - 1]
+  }
+}
+
 function getOpcode(string: string): number {
   let opcode = 0;
   const removed_comments = string.split(";");
@@ -118,8 +127,24 @@ export function activate(context: ExtensionContext) {
     }
   }
 
-
   vscode.languages.registerInlayHintsProvider({ pattern: "**", language: "robson" }, provider);
+  var type = "robson";
+  vscode.tasks.registerTaskProvider(type, {
+    provideTasks() {
+      const path = vscode.window.activeTextEditor.document.uri.path;
+      vscode.window.activeTextEditor.document.save();
+      var execution = new vscode.ShellExecution(`robson "${path}"`);
+      let task = new vscode.Task({ type }, vscode.TaskScope.Workspace,
+        `run ${getFileName(path)}`, "Robson", execution);
+      task.group = vscode.TaskGroup.Build;
+      return [
+        task
+      ];
+    },
+    resolveTask(task) {
+      return task;
+    }
+  });
 }
 
 export function deactivate(): Thenable<void> | undefined {
