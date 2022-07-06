@@ -6,10 +6,15 @@ let client: LanguageClient;
 
 function getFileName(path: string): string {
   const splited = path.split("/");
-  if (splited.length === 0) {
-    return path
-  } else {
+  const windowsSplited = path.split("\\");
+
+  if (splited.length > windowsSplited.length) {
+    if (splited.length === 0) {
+      return path
+    }
     return splited[splited.length - 1]
+  } else {
+    return windowsSplited[windowsSplited.length - 1]
   }
 }
 
@@ -131,11 +136,11 @@ export function activate(context: ExtensionContext) {
   var type = "robson";
   vscode.tasks.registerTaskProvider(type, {
     provideTasks() {
-      const path = vscode.window.activeTextEditor.document.uri.path;
+      const path = vscode.window.activeTextEditor.document.uri.fsPath;
       vscode.window.activeTextEditor.document.save();
       var execution = new vscode.ShellExecution(`robson "${path}"`);
       let task = new vscode.Task({ type }, vscode.TaskScope.Workspace,
-        `run ${getFileName(path)}`, "Robson", execution);
+        `Execute ${getFileName(path)}`, "Robson", execution);
       task.group = vscode.TaskGroup.Build;
       return [
         task

@@ -36,7 +36,7 @@
     "contributes": {
         "taskDefinitions": [
             {
-                "type": "robson",
+                "type": "Robson",
                 "properties": {
                     "isBuildCommand": true
                 }
@@ -81,8 +81,7 @@
             {
                 "id": "robson",
                 "aliases": [
-                    "robson",
-                    "robson"
+                    "Robson"
                 ],
                 "extensions": [
                     ".robson"
