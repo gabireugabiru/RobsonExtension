@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.1.0
+> #### Added
+> - unknown inlay hint
+> - support for the new commands in robson 0.1.1
+
+> #### Changed
+> - build task to actually build
+
+## 0.0.9
+> #### Changed
+> - run task to support windows computers
+> - README.md to update the view of the new features
+
 ## 0.0.8
 > #### Added
 > - error for comeu, fudeu, penetrou and chupou malformated numbers

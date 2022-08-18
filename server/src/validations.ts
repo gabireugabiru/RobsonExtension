@@ -36,7 +36,7 @@ async function validateCommands(textDocument: TextDocument, problems: Problems, 
     while ((match = commandPattern.exec(text)) && problems.current < problems.max) {
         const stringMatch = match.toString();
         const opcode = getOpcode(stringMatch);
-        if (opcode < 0 || opcode > 12) {
+        if (opcode < 0 || opcode > 15) {
             continue
         }
         const start = textDocument.positionAt(match.index);

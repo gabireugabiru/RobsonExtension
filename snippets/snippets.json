@@ -130,5 +130,74 @@
             "comeu ${1:0}"
         ],
         "description": "load the string from the address of param1"
+    },
+    "start counting": {
+        "prefix": "count",
+        "body": [
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 0"
+        ],
+        "description": "start counting with the counting internals"
+    },
+    "set interval": {
+        "prefix": "interval",
+        "body": [
+            "robson robson robson",
+            "comeu ${1:0}",
+            "comeu ${2:0}",
+            "",
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 1"
+        ],
+        "description": "set a interval to be compared"
+    },
+    "compare interval": {
+        "prefix": "cmp_interval",
+        "body": [
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 2"
+        ],
+        "description": "pushes 0 to stack if lower than inteval, 1 if equal and 2 if greater"
+    },
+    "flush": {
+        "prefix": "flush",
+        "body": "robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+        "description": "flushes stdout to terminal"
+    },
+    "enter raw mode": {
+        "prefix": "enter",
+        "body": [
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 0"
+        ],
+        "description": "enter the raw mode, leave it before the program ends"
+    },
+    "leave raw mode": {
+        "prefix": "leave",
+        "body": [
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 1"
+        ],
+        "description": "leave the raw mode"
+    },
+    "clear": {
+        "prefix": "clear",
+        "body": [
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 2"
+        ],
+        "description": "clear terminal"
+    },
+    "poll input": {
+        "prefix": "poll",
+        "body": [
+            "robson robson robson",
+            "comeu ${1:0}",
+            "comeu ${2:0}",
+            "",
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 3"
+        ],
+        "description": "wait for the given time an input and push it to stack"
     }
 }

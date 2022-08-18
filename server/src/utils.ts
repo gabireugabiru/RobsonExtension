@@ -49,7 +49,10 @@ export const parameterCount = {
     9: 1,
     10: 1,
     11: 0,
-    12: 1
+    12: 1,
+    13: 1,
+    14: 0,
+    15: 1
 }
 export const labels = {
     1: "operation",

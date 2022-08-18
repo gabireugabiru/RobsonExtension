@@ -17,6 +17,26 @@ function getFileName(path: string): string {
     return windowsSplited[windowsSplited.length - 1]
   }
 }
+function flast(path: string): string[] {
+  const last = [];
+  const first = [];
+  let has_found = false;
+  for (let i = 0; i < path.length; i++) {
+    const char = path.charAt(i);
+    if (has_found) {
+      first.push(char);
+      continue
+    }
+    if (char == "\\" || char == "/") {
+      has_found = true;
+    } else {
+      last.push(char);
+    }
+  }
+  const first_str = first.reverse().toString();
+  const last_str = last.reverse.toString();
+  return [first_str, last_str];
+}
 
 function getOpcode(string: string): number {
   let opcode = 0;
@@ -48,7 +68,10 @@ const labels = {
   9: "jump",
   10: "set",
   11: "pop",
-  12: "load"
+  12: "load",
+  13: "time",
+  14: "flush",
+  15: "terminal"
 }
 
 export function activate(context: ExtensionContext) {
@@ -107,10 +130,7 @@ export function activate(context: ExtensionContext) {
       while (match = pattern.exec(text)) {
         const stringMatch = match.toString();
         const opcode = getOpcode(stringMatch);
-        if (opcode < 1 || opcode > 12) {
-          continue;
-        }
-        let label = labels[opcode];
+        let label = (opcode < 1 || opcode > 15) ? "unknown" : labels[opcode];
         let n_for_robson = 0;
         for (const char of stringMatch) {
           if (char === " ") {
@@ -138,7 +158,8 @@ export function activate(context: ExtensionContext) {
     provideTasks() {
       const path = vscode.window.activeTextEditor.document.uri.fsPath;
       vscode.window.activeTextEditor.document.save();
-      var execution = new vscode.ShellExecution(`robson "${path}"`);
+      const [first, last] = flast(path);
+      var execution = new vscode.ShellExecution(`robson ${path} compile`);
       let task = new vscode.Task({ type }, vscode.TaskScope.Workspace,
         `Execute ${getFileName(path)}`, "Robson", execution);
       task.group = vscode.TaskGroup.Build;
