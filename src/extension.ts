@@ -17,26 +17,15 @@ function getFileName(path: string): string {
     return windowsSplited[windowsSplited.length - 1]
   }
 }
-function flast(path: string): string[] {
-  const last = [];
-  const first = [];
-  let has_found = false;
-  for (let i = 0; i < path.length; i++) {
-    const char = path.charAt(i);
-    if (has_found) {
-      first.push(char);
-      continue
-    }
-    if (char == "\\" || char == "/") {
-      has_found = true;
-    } else {
-      last.push(char);
-    }
+
+function removeComments(string: string): string {
+  const removed_comments = string.split(";");
+  if (removed_comments.length > 0) {
+    string = removed_comments[0];
   }
-  const first_str = first.reverse().toString();
-  const last_str = last.reverse.toString();
-  return [first_str, last_str];
+  return string.trim()
 }
+
 
 function getOpcode(string: string): number {
   let opcode = 0;
@@ -56,6 +45,23 @@ function getOpcode(string: string): number {
   return opcode;
 }
 
+function multi_function_opcode(object: any, max: number, lines: string[], i: number): string {
+  let label = "";
+  let next = lines[i + 1];
+  next = removeComments(next);
+  next = next.trim();
+  if (next.length != 0) {
+    const splited = next.split(" ");
+    if (splited.length > 0) {
+      const value = Number(splited[1]);
+      if (value < max) {
+        label = object[value];
+      }
+    }
+  }
+  return label
+}
+
 const labels = {
   1: "operation",
   2: "if lower",
@@ -72,6 +78,24 @@ const labels = {
   13: "time",
   14: "flush",
   15: "terminal"
+}
+const operations = {
+  0: "add",
+  1: "sub",
+  2: "mul",
+  3: "div"
+}
+const time = {
+  0: "count",
+  1: "interval",
+  2: "cmp_interval"
+}
+const terminal = {
+  0: "raw",
+  1: "clear",
+  2: "poll",
+  3: "togg_cursor",
+  4: "mv_cursor"
 }
 
 export function activate(context: ExtensionContext) {
@@ -127,26 +151,51 @@ export function activate(context: ExtensionContext) {
 
       const text = document.getText();
       const hints: vscode.InlayHint[] = [];
-      while (match = pattern.exec(text)) {
-        const stringMatch = match.toString();
-        const opcode = getOpcode(stringMatch);
-        let label = (opcode < 1 || opcode > 15) ? "unknown" : labels[opcode];
-        let n_for_robson = 0;
-        for (const char of stringMatch) {
-          if (char === " ") {
-            n_for_robson++
-          } else {
-            break
+
+      const lines = text.split("\n");
+
+      console.log(lines);
+      console.log(text);
+
+      let index = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        if (line.includes("robson")) {
+          const opcode = getOpcode(line);
+
+          let label = (opcode < 1 || opcode > 15) ? "unknown" : labels[opcode];
+          let new_label = "";
+          if (opcode == 1) {
+            new_label = multi_function_opcode(operations, 4, lines, i);
+          } else if (opcode == 13) {
+            new_label = multi_function_opcode(time, 3, lines, i);
+          } else if (opcode == 15) {
+            new_label = multi_function_opcode(terminal, 5, lines, i);
           }
+          if (new_label != "") {
+            label = new_label;
+          }
+          let before_spaces = 0;
+          for (const char of line) {
+            if (char === " ") {
+              before_spaces++
+            } else {
+              break
+            }
+          }
+
+          const position = document.positionAt(index + before_spaces);
+          const hint: vscode.InlayHint = {
+            label,
+            position,
+            kind: vscode.InlayHintKind.Type,
+            paddingRight: true
+          }
+          hints.push(hint);
         }
-        const position = document.positionAt(match.index + n_for_robson);
-        const hint: vscode.InlayHint = {
-          label,
-          position,
-          kind: vscode.InlayHintKind.Type,
-          paddingRight: true
-        }
-        hints.push(hint);
+        index += line.length + 1;
       }
       return hints as vscode.ProviderResult<vscode.InlayHint[]>;
     }
@@ -158,7 +207,6 @@ export function activate(context: ExtensionContext) {
     provideTasks() {
       const path = vscode.window.activeTextEditor.document.uri.fsPath;
       vscode.window.activeTextEditor.document.save();
-      const [first, last] = flast(path);
       var execution = new vscode.ShellExecution(`robson ${path} compile`);
       let task = new vscode.Task({ type }, vscode.TaskScope.Workspace,
         `Execute ${getFileName(path)}`, "Robson", execution);

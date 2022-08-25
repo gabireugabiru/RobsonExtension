@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.1.1
+> #### Changed
+> - now inlay hints show variations of the same command
+> - .robson icon
+
 ## 0.1.0
 > #### Added
 > - unknown inlay hint

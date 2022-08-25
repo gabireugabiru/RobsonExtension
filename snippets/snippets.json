@@ -1,8 +1,7 @@
 {
     "add": {
         "prefix": [
-            "add",
-            "sum"
+            "add"
         ],
         "body": [
             "robson",
@@ -167,6 +166,8 @@
     "enter raw mode": {
         "prefix": "enter",
         "body": [
+            "robson robson robson",
+            "comeu 1",
             "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
             "comeu 0"
         ],
@@ -175,18 +176,32 @@
     "leave raw mode": {
         "prefix": "leave",
         "body": [
+            "robson robson robson",
+            "comeu 0",
             "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
-            "comeu 1"
+            "comeu 0"
         ],
         "description": "leave the raw mode"
     },
-    "clear": {
-        "prefix": "clear",
+    "clear_purge": {
+        "prefix": "clear_purge",
         "body": [
+            "robson robson robson",
+            "comeu 0",
             "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
-            "comeu 2"
+            "comeu 1"
         ],
-        "description": "clear terminal"
+        "description": "clear terminal clear all cells history"
+    },
+    "clear_all": {
+        "prefix": "clear_all",
+        "body": [
+            "robson robson robson",
+            "comeu 0",
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 1"
+        ],
+        "description": "clear all cells"
     },
     "poll input": {
         "prefix": "poll",
@@ -196,8 +211,31 @@
             "comeu ${2:0}",
             "",
             "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
-            "comeu 3"
+            "comeu 2"
         ],
         "description": "wait for the given time an input and push it to stack"
+    },
+    "toggle cursor": {
+        "prefix": "togg_cursor",
+        "body": [
+            "robson robson robson",
+            "comeu ${1:0}",
+            "",
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 3"
+        ],
+        "description": "show and hide the cursor based on the stack top\n    if its 0 hide cursor otherwise shows it"
+    },
+    "move cursor": {
+        "prefix": "mv_cursor",
+        "body": [
+            "robson robson robson",
+            "comeu ${1:0}",
+            "comeu ${2:0}",
+            "",
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 4"
+        ],
+        "description": "move the cursor to the x y, on the stack top"
     }
 }
