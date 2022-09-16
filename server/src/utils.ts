@@ -19,6 +19,28 @@ export function removeComments(string: string): string {
     return string.trim()
 }
 
+export function remove_file_prefix(a: string): string {
+    let splited = a.split("file://");
+    if (splited.length < 2) {
+        return a;
+    }
+    let new_path = "";
+    for (let i = 1; i < splited.length; i++) {
+        new_path += splited[i];
+    }
+    return new_path;
+}
+
+export function get_robsons_path(a: string): string {
+    const splited = a.split("robsons");
+
+    if (splited.length != 2) {
+        return "";
+    }
+
+    return splited[1]
+
+}
 
 export function getOpcode(string: string): number {
     let opcode = 0;

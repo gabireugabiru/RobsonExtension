@@ -5,10 +5,10 @@
 			"include": "#comments"
 		},
 		{
-			"include": "#keywords"
+			"include": "#path"
 		},
 		{
-			"include": "#strings"
+			"include": "#keywords"
 		},
 		{
 			"include": "#methods"
@@ -25,7 +25,7 @@
 			"patterns": [
 				{
 					"name": "keyword.control.robson",
-					"match": "\\b(robson)\\b"
+					"match": "\\b(robson|robsons)\\b"
 				}
 			]
 		},
@@ -57,14 +57,17 @@
 				}
 			]
 		},
-		"strings": {
-			"name": "string.quoted.double.robson",
-			"begin": "\"",
-			"end": "\"",
+		"path": {
 			"patterns": [
 				{
-					"name": "constant.character.escape.robson",
-					"match": "\\\\."
+					"name": "string.quoted.double.robson",
+					"begin": "robsons ",
+					"beginCaptures": {
+						"0": {
+							"name": "keyword.control.robson"
+						}
+					},
+					"end": "\n"
 				}
 			]
 		},

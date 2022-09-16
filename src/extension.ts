@@ -143,11 +143,6 @@ export function activate(context: ExtensionContext) {
   const provider: vscode.InlayHintsProvider<vscode.InlayHint> = {
 
     provideInlayHints(document, position, context) {
-      console.log("triggered");
-
-      const pattern = /^ *?robson *.*/gm
-
-      let match: RegExpExecArray | null;
 
       const text = document.getText();
       const hints: vscode.InlayHint[] = [];
@@ -158,13 +153,15 @@ export function activate(context: ExtensionContext) {
       console.log(text);
 
       let index = 0;
-
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
         if (line.includes("robson")) {
           const opcode = getOpcode(line);
-
+          if (opcode == -1) {
+            index += line.length + 1;
+            continue
+          }
           let label = (opcode < 1 || opcode > 15) ? "unknown" : labels[opcode];
           let new_label = "";
           if (opcode == 1) {
@@ -202,6 +199,7 @@ export function activate(context: ExtensionContext) {
   }
 
   vscode.languages.registerInlayHintsProvider({ pattern: "**", language: "robson" }, provider);
+
   var type = "robson";
   vscode.tasks.registerTaskProvider(type, {
     provideTasks() {
@@ -209,7 +207,7 @@ export function activate(context: ExtensionContext) {
       vscode.window.activeTextEditor.document.save();
       var execution = new vscode.ShellExecution(`robson ${path} compile`);
       let task = new vscode.Task({ type }, vscode.TaskScope.Workspace,
-        `Execute ${getFileName(path)}`, "Robson", execution);
+        `Compile ${getFileName(path)}`, "Robson", execution);
       task.group = vscode.TaskGroup.Build;
       return [
         task

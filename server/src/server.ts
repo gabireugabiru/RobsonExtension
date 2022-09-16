@@ -18,9 +18,11 @@ import {
     Range,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { lowerAlias } from "./utils";
+import { get_robsons_path, lowerAlias, removeComments, remove_file_prefix } from "./utils";
 import { validateTextDocument } from './validations';
-
+import { ConnectionOptions } from 'vscode-languageclient';
+import * as fs from "node:fs/promises";
+import * as path from "path"
 interface DefaultSettings {
     maxNumberOfProblems: number;
 }
@@ -52,7 +54,6 @@ export function setAliasUse(newUses: AliasInfo[]) {
 
 connection.onInitialize((params: InitializeParams) => {
     let capabilities = params.capabilities;
-
     // Does the client support the `workspace/configuration` request?
     // If not, we fall back using global settings.
     hasConfigurationCapability = !!(
@@ -166,13 +167,68 @@ connection.onDefinition(params => {
 
     return Location.create(params.textDocument.uri, aliasDeclaration.range);
 })
+// connection.workspace.onDidChangeWorkspaceFolders((param) => {
+//     // connection.console.log(param.added);
 
+//     for (const a of param.added) {
+//         connection.console.log(a.name);
+//     }
+
+// })
 // This handler provides the initial list of the completion items.
+
 connection.onCompletion(
-    (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+    async (textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
         // The pass parameter contains the position of the text document in
         // which code complete got requested. For the example we ignore this
         // info and always provide the same completion items.
+        // connection.console.log(textDocumentPosition.position.line)
+
+        const textDocument = documents.get(textDocumentPosition.textDocument.uri);
+
+        const raw_text = textDocument?.getText({
+            start: {
+                character: 0,
+                line: textDocumentPosition.position.line
+            },
+            end: {
+                character: 0,
+                line: textDocumentPosition.position.line + 1
+            }
+        })
+        const paths = [];
+        if (raw_text) {
+            const text = removeComments(raw_text);
+            if (text.includes("robsons")) {
+                const robsons_path = get_robsons_path(text);
+                const a = await connection.workspace.getWorkspaceFolders();
+                if (a) {
+                    for (const folder of a) {
+                        let root_path = remove_file_prefix(folder.uri);
+                        root_path = path.join(root_path, robsons_path.trim());
+                        try {
+                            const j = await fs.readdir(root_path);
+                            for (const s of j) {
+                                const info = await fs.lstat(path.join(root_path, s));
+                                if (info.isFile()) {
+                                    paths.push(s);
+                                }
+                                if (info.isDirectory()) {
+                                    paths.push(`${s}/`)
+                                }
+                                connection.console.log(s);
+                            }
+                        } catch { }
+                    }
+                }
+            }
+        }
+        const pathsCompletion: CompletionItem[] = paths.map(path => {
+            return {
+                label: path,
+                kind: CompletionItemKind.File
+            }
+        })
 
         const aliasesCompletetion: CompletionItem[] = aliases.map(alias => {
             return {
@@ -180,7 +236,9 @@ connection.onCompletion(
                 kind: CompletionItemKind.Function
             }
         });
-
+        if (pathsCompletion.length > 0) {
+            return pathsCompletion
+        }
         return [
             {
                 label: 'comeu',
@@ -212,7 +270,7 @@ connection.onCompletion(
                 kind: CompletionItemKind.Keyword,
                 data: "b6",
             },
-            ...aliasesCompletetion
+            ...aliasesCompletetion,
         ];
     }
 );

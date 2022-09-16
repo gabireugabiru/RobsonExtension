@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.1.2
+> #### Added
+> - path autocomplete
+> - syntax highligh on robsons
+
+> #### Fixed
+> - inlay hints appearing where they shouldn't
+
 ## 0.1.1
 > #### Changed
 > - now inlay hints show variations of the same command
