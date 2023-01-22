@@ -237,5 +237,16 @@
             "comeu 4"
         ],
         "description": "move the cursor to the x y, on the stack top"
+    },
+    "color": {
+        "prefix": "color",
+        "body": [
+            "robson robson robson",
+            "comeu 5",
+            "",
+            "robson robson robson robson robson robson robson robson robson robson robson robson robson robson robson",
+            "comeu 5"
+        ],
+        "description": "move the cursor to the x y, on the stack top"
     }
 }

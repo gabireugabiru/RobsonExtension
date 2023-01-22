@@ -16,6 +16,7 @@ import {
     TextEdit,
     Location,
     Range,
+    Hover,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { get_robsons_path, lowerAlias, removeComments, remove_file_prefix } from "./utils";
@@ -201,12 +202,20 @@ connection.onCompletion(
             const text = removeComments(raw_text);
             if (text.includes("robsons")) {
                 const robsons_path = get_robsons_path(text);
-                const a = await connection.workspace.getWorkspaceFolders();
-                if (a) {
-                    for (const folder of a) {
+                connection.console.log(`robson -> ${robsons_path}`);
+                const folderConnection = await connection.workspace.getWorkspaceFolders();
+
+                if (folderConnection) {
+                    for (const folder of folderConnection) {
                         let root_path = remove_file_prefix(folder.uri);
-                        root_path = path.join(root_path, robsons_path.trim());
+
+                        robsons_path.forEach((x, i) => {
+                            if (robsons_path.length - 1 !== i) {
+                                root_path = path.join(root_path, x.trim());
+                            }
+                        });
                         try {
+                            connection.console.log(`${robsons_path},, ${root_path}`);
                             const j = await fs.readdir(root_path);
                             for (const s of j) {
                                 const info = await fs.lstat(path.join(root_path, s));
@@ -214,9 +223,9 @@ connection.onCompletion(
                                     paths.push(s);
                                 }
                                 if (info.isDirectory()) {
-                                    paths.push(`${s}/`)
+                                    paths.push(`${s}\\`);
                                 }
-                                connection.console.log(s);
+                                // connection.console.log(s);
                             }
                         } catch { }
                     }
@@ -362,6 +371,32 @@ connection.onExecuteCommand(params => {
         }
     }
 })
+
+// connection.onHover(params => {
+//     // params.position.line
+//     // params.position.character
+//     const textDocument = documents.get(params.textDocument.uri);
+//     const text = textDocument?.getText();
+//     if (text) {
+//         const split = text.split("\n");
+//         connection.console.log(split[params.position.line]);
+
+//         // const a: Hover = {
+//         //     contents: "Teste",
+//         //     // range: {
+//         //     //     start: {
+//         //     //         line: params.position.line,
+//         //     //         character: 0
+//         //     //     },
+//         //     //     end: {
+//         //     //         line: params.pos
+//         //     //     }
+//         //     // }
+//         // }
+//     }
+
+//     return null;
+// })
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events

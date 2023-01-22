@@ -31,14 +31,14 @@ export function remove_file_prefix(a: string): string {
     return new_path;
 }
 
-export function get_robsons_path(a: string): string {
+export function get_robsons_path(a: string): string[] {
     const splited = a.split("robsons");
 
     if (splited.length != 2) {
-        return "";
+        return [];
     }
 
-    return splited[1]
+    return splited[1].split("\\");
 
 }
 

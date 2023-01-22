@@ -95,7 +95,8 @@ const terminal = {
   1: "clear",
   2: "poll",
   3: "togg_cursor",
-  4: "mv_cursor"
+  4: "mv_cursor",
+  5: "color"
 }
 
 export function activate(context: ExtensionContext) {
@@ -200,12 +201,111 @@ export function activate(context: ExtensionContext) {
 
   vscode.languages.registerInlayHintsProvider({ pattern: "**", language: "robson" }, provider);
 
-  var type = "robson";
+  vscode.languages.registerHoverProvider("robson", {
+    provideHover(textDocument, position, c) {
+      const wordRange = textDocument.getWordRangeAtPosition(position);
+      const word = textDocument.getText(wordRange);
+      let line = textDocument.getText(new vscode.Range(new vscode.Position(position.line, 0), new vscode.Position(position.line + 1, 0)))
+      // if (word === "robson") {
+      //   return {
+      //     contents: ["robsion"]
+      //   };
+      // }
+      line = removeComments(line);
+
+      if (line.length < position.character) {
+        return null
+      }
+
+      if (word === "comeu") {
+        return {
+          contents: [`# Comeu
+          Get the raw value you input, the simpler you can get
+            
+            robson robson robson
+            comeu 10
+          
+          This will simply push the number 10
+
+          For floats or signed integers use the following respectively
+
+          robson robson robson
+          comeu f10 ; for floats
+
+          robson robson robson
+          comeu i10 ; for signed integers 
+
+          `]
+        }
+      }
+
+      if (word === "chupou") {
+        return {
+          contents: [`# Chupou
+          Get the value of the top of the stack
+            
+            robson robson robson
+            chupou 0
+          
+          chupou will not work if the value is other than 0
+          `]
+        }
+      }
+
+      if (word === "fudeu") {
+        return {
+          contents: [`# Fudeu
+          Get the value in the given memory address
+            
+            robson robson robson
+            fudeu 51
+          
+          fudeu only accepts usigned integers
+          `]
+        }
+      }
+      if (word === "penetrou") {
+        return {
+          contents: [`# Penetrou
+          Follows the memory address 2 times
+            
+            robson robson robson
+            penetrou 2
+          
+          In this exmaple it will push the value in the address that the address 2 points
+
+          penetrou only accepts unisgned integers
+          `]
+        }
+      }
+
+      if (word === "lambeu") {
+        return {
+          contents: [`# Lambeu
+          Get the value of the number of the next command in an alias
+            
+            alias: 
+
+            robson robson robson
+            lambeu :alias
+          
+          This example will push 0, because the alias is behind the first command
+          `]
+        }
+      }
+
+
+      return null
+    }
+  })
+
+
+  let type = "robson";
   vscode.tasks.registerTaskProvider(type, {
     provideTasks() {
       const path = vscode.window.activeTextEditor.document.uri.fsPath;
       vscode.window.activeTextEditor.document.save();
-      var execution = new vscode.ShellExecution(`robson ${path} compile`);
+      let execution = new vscode.ShellExecution(`robson ${path} compile`);
       let task = new vscode.Task({ type }, vscode.TaskScope.Workspace,
         `Compile ${getFileName(path)}`, "Robson", execution);
       task.group = vscode.TaskGroup.Build;
